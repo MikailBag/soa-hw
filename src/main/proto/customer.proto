@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+option java_package = "com.example.demo.formats.protobuf";
+
+message HistoryItem {
+    string key = 1;
+    repeated string values = 2;
+}
+
+enum CustomerStatus {
+    UNKNOWN = 0;
+    ALIVE = 1;
+    DEAD = 2;
+    DEAD_INSIDE = 3;
+}
+
+message EnterpriseLevelCustomer {
+    string name = 1;
+    int32 age = 2;
+    double balance = 3;
+    CustomerStatus status = 4;
+    repeated string cats = 5;
+    repeated HistoryItem history = 6;
+}
