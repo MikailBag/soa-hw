@@ -4,6 +4,8 @@ services:
     environment:
       PROXY_SERVER_DISCOVERY_UPSTREAM_COUNT: "7"
       SPRING_PROFILES_ACTIVE: proxy
+    ports:
+    - "2000:2000/udp"
   json:
     image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
     environment:
