@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package com.example.demo.api.citizen;
+
+option go_package="example.com/soa/pb";
+
+message CitizenVoteRequest {
+  string room_id = 1;
+  // id of the sender
+  string participant_id = 2;
+  // id of the participant who should be executed
+  string suspected_id = 3;
+}
+
+message CitizenVoteResponse {}
+
+service CitizenService {
+  rpc Vote(CitizenVoteRequest) returns (CitizenVoteResponse);
+}

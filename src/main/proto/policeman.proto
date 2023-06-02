@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package com.example.demo.api.policeman;
+
+option go_package="example.com/soa/pb";
+
+message CheckRequest {
+  string room_id = 1;
+  string participant_id = 2;
+  string suspected_id = 3;
+}
+
+message CheckResponse {
+}
+
+message RevealRequest {
+  string room_id = 1;
+}
+
+message RevealResponse {
+}
+
+service PolicemanService {
+  rpc Check(CheckRequest) returns (CheckResponse);
+  rpc Reveal(RevealRequest) returns (RevealResponse);
+}

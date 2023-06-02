@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.example.demo.api.criminal;
+
+option go_package="example.com/soa/pb";
+
+message CriminalVoteRequest {
+  string room_id = 1;
+  string participant_id = 2;
+  string victim_id = 3;
+}
+
+message CriminalVoteResponse {
+}
+
+service CriminalService {
+  rpc Vote(CriminalVoteRequest) returns (CriminalVoteResponse);
+}

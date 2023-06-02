@@ -1,0 +1,169 @@
+syntax = "proto3";
+
+
+package com.example.demo.api.game;
+
+option go_package="example.com/soa/pb";
+
+enum Role {
+  // not disclosed
+  UNKNOWN = 0;
+  // no special roles as defined below
+  NORMAL = 1;
+  CRIMINAL = 2;
+  // either tie breaker or one who solely chooses victims
+  // (depends on the room settings)
+  CRIMINAL_BOSS = 3;
+  POLICEMAN = 4;
+}
+
+message Vote {
+  string voter_id = 1;
+  string target_id = 2;
+}
+
+message DayState {
+  repeated Vote citizen_votes = 1;
+}
+
+message PolicemanCheck {
+  string policeman_id = 1;
+  string target_id = 2;
+
+  bool revealed = 4;
+}
+
+message NightState {
+  repeated Vote criminal_votes = 1;
+  bool criminal_vote_complete = 3;
+  string victim_id = 4;
+  repeated PolicemanCheck policeman_checks = 2;
+}
+
+message Participant {
+  enum State {
+    ALIVE = 0;
+    KILLED_AT_NIGHT = 1;
+    KILLED_AT_DAY = 2;
+  }
+
+  string id = 1;
+  string name = 2;
+  State state = 3;
+  Role role = 4;
+}
+
+message Settings {
+  // how many players will participate in the game
+  uint32 player_count = 1;
+  // count of criminals in the game
+  uint32 criminal_count = 2;
+  // count of policemen in the game
+  uint32 policeman_count = 3;
+  // whether dead participant immediately knows all roles
+  bool dead_know_everything = 4;
+  // whether identity of the participant who was chosen for execution is revealed
+  bool executed_are_revealed = 5;
+  // whether identity of the participant who was killed at night is revealed
+  bool killed_are_revealed = 6;
+  // whether criminal boss has extra half-vote
+  bool criminal_boss_breaks_ties = 7;
+}
+
+message Cycle {
+  DayState day = 1;
+  NightState night = 2;
+}
+
+message Game {
+  enum Outcome {
+    UNSET = 0;
+    CITIZENS_WON = 1;
+    CRIMINALS_WON = 2;
+  }
+  Outcome outcome = 10;
+  string id = 1;
+  string title = 5;
+  repeated Participant participants = 3;
+  Settings settings = 4;
+  enum State {
+    // Game has not started yet in the room
+    NOT_STARTED = 0;
+    // Game has started and has not finished
+    IN_PROGRESS = 1;
+    // Game has finished
+    FINISHED = 2;
+  }
+  State state = 8;
+  oneof current_cycle_phase {
+    DayState day = 2;
+    NightState night = 7;
+  };
+  enum DayPhase {
+    // daylight activities in progress
+    DAY = 0;
+    // night activities in progress
+    NIGHT = 1;
+  }
+  repeated Cycle history = 9;
+  // sequential id, starting at 1, which increments each time phase changes from NIGHT to DAY
+  uint32 cycle_number = 6;
+  // positive number representing game revision
+  uint32 revision = 11;
+}
+
+message GetRequest {
+  string room_id = 1;
+  string participant_id = 2;
+}
+
+message GetResponse {
+  Game game = 1;
+}
+
+message JoinRequest {
+  string room_id = 1;
+  // free-form participant name
+  string name = 2;
+}
+
+message JoinResponse {
+  // identifies this participant in further API calls
+  string participant_id = 1;
+}
+
+message CreateRequest {
+  Settings settings = 1;
+  string title = 2;
+}
+
+message CreateResponse {
+  string game_id = 1;
+}
+
+message ListRequest {
+}
+
+message ListResponse {
+  repeated Game games = 1;
+}
+
+message PollRequest {
+  string game_id = 1;
+  uint32 observed_revision = 2;
+}
+
+message PollResponse {
+  oneof outcome {
+    uint32 revision = 1;
+    bool timeout = 2;
+  }
+}
+
+service GameService {
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Create(CreateRequest) returns (CreateResponse);
+  rpc Join(JoinRequest) returns (JoinResponse);
+  rpc List(ListRequest) returns (ListResponse);
+  rpc Poll(PollRequest) returns (PollResponse);
+}

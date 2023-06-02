@@ -2,8 +2,14 @@
 set -euxo pipefail
 
 # it is too hard to correctly version images
-IMAGE=cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
+SERVER_IMAGE=cr.yandex/crpepnp6t24n31l71vv9/soa-2
+CLIENT_IMAGE=cr.yandex/crpepnp6t24n31l71vv9/soa-2-client
 
 ./gradlew build
-docker build -f ./Dockerfile ./build/distributions/ -t ${IMAGE}
-docker push ${IMAGE}
+( cd client && go build . )
+
+docker build -f ./Dockerfile ./build/distributions/ -t ${SERVER_IMAGE}
+( cd client && docker build . -t ${CLIENT_IMAGE} )
+
+docker push ${SERVER_IMAGE}
+docker push ${CLIENT_IMAGE}

@@ -1,45 +1,23 @@
 services:
-  proxy:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
+  server:
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-2
     environment:
-      PROXY_SERVER_DISCOVERY_UPSTREAM_COUNT: "7"
-      SPRING_PROFILES_ACTIVE: proxy
-  json:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
-    environment:
-      BENCHMARK_DEFAULT_DATA_FORMAT: json
-      SPRING_PROFILES_ACTIVE: server
-  yaml:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
-    environment:
-      BENCHMARK_DEFAULT_DATA_FORMAT: yaml
-      SPRING_PROFILES_ACTIVE: server
-  xml:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
-    environment:
-      BENCHMARK_DEFAULT_DATA_FORMAT: xml
-      SPRING_PROFILES_ACTIVE: server
-  native:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
-    environment:
-      BENCHMARK_DEFAULT_DATA_FORMAT: native
-      SPRING_PROFILES_ACTIVE: server
-  msgpack:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
-    environment:
-      BENCHMARK_DEFAULT_DATA_FORMAT: msgpack
-      SPRING_PROFILES_ACTIVE: server
-  protobuf:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
-    environment:
-      BENCHMARK_DEFAULT_DATA_FORMAT: protobuf
-      SPRING_PROFILES_ACTIVE: server
-  avro:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-1:latest
-    environment:
-      BENCHMARK_DEFAULT_DATA_FORMAT: avro
-      SPRING_PROFILES_ACTIVE: server
-networks:
-  main:
-    ipam:
-      driver: default
+      SERVER: 'true'
+    ports:
+      - '8443:8443'
+  client1:
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-2-client
+    command:
+      - --address
+      - 'server:8443'
+  client2: &client
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-2-client
+    command:
+      - --address
+      - 'server:8443'
+      - --join-existing
+  client3:
+    <<: *client
+  client4:
+    <<: *client
+
