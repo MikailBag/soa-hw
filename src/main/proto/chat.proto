@@ -19,6 +19,11 @@ message Topic {
   string stream_id = 2;
 }
 
+message ServerInternalMessageDto {
+  Topic topic = 1;
+  MessageData data = 2;
+}
+
 message SendRequest {
   Topic topic = 1;
   MessageData message = 2;

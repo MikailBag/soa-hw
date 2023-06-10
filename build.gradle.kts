@@ -65,7 +65,7 @@ dependencies {
 	implementation("io.grpc:grpc-stub:1.49.2")
 	implementation("org.jetbrains:annotations:24.0.1")
 	implementation("javax.annotation:javax.annotation-api:1.3.2")
-	implementation("redis.clients:jedis:4.3.1")
+	implementation("redis.clients:jedis:4.4.2")
 }
 
 application {

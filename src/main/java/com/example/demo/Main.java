@@ -19,7 +19,7 @@ public class Main {
         app.setAdditionalProfiles("server");
 
         app.run(args);
-        // sleep forever since we are server; out thread will be killed at the end of the
+        // sleep forever since we are server; our thread will be killed at the end of the
         // JVM shutdown sequence.
         while (true) {
             LockSupport.park();

@@ -29,7 +29,7 @@ class ApiServer implements AutoCloseable {
         services.forEach(builder::addService);
         builder.executor(Executors.newThreadPerTaskExecutor(
                 Thread.ofVirtual()
-                        .name("grpc-server-", 0)
+                        .name("grpc-handler-", 0)
                         .factory()
         ));
         this.server = builder.build();

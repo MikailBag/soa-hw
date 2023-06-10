@@ -1,17 +1,20 @@
 services:
+  redis:
+    image: docker.io/library/redis
   server:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-2
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-3
     environment:
       SERVER: 'true'
+      MESSAGING_REDIS_HOST: 'redis'
     ports:
       - '8443:8443'
   client1:
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-2-client
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
     command:
       - --address
       - 'server:8443'
   client2: &client
-    image: cr.yandex/crpepnp6t24n31l71vv9/soa-2-client
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
     command:
       - --address
       - 'server:8443'
