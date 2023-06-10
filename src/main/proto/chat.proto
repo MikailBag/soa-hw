@@ -2,29 +2,38 @@ syntax = "proto3";
 
 package com.example.demo.api.chat;
 
-option go_package="example.com/soa/pb";
+option go_package = "example.com/soa/pb";
 
-message Message {
+message MessageData {
   // author of the message
   string participant_id = 1;
   string body = 2;
+  bool eof = 3;
+}
+
+message Topic {
+  string room_id = 1;
+  // "main" - available during day, readable for all, writable for all alive
+  // "criminals" - always available, readable & writable for alive criminals
+  // "dead" - always available, readable & writable for killed players
+  string stream_id = 2;
 }
 
 message SendRequest {
-  string room_id = 1;
-  string participant_id = 2;
-  Message message = 3;
+  Topic topic = 1;
+  MessageData message = 2;
 }
 
 message SendResponse {
 }
 
 message WatchRequest {
-  string room_id = 2;
+  Topic topic = 1;
+  string participant_id = 2;
 }
 
 message WatchEvent {
-  Message message = 1;
+  MessageData message = 1;
 }
 
 service ChatService {

@@ -2,8 +2,8 @@
 set -euxo pipefail
 
 # it is too hard to correctly version images
-SERVER_IMAGE=cr.yandex/crpepnp6t24n31l71vv9/soa-2
-CLIENT_IMAGE=cr.yandex/crpepnp6t24n31l71vv9/soa-2-client
+SERVER_IMAGE=cr.yandex/crpepnp6t24n31l71vv9/soa-3
+CLIENT_IMAGE=cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
 
 ./gradlew build
 ( cd client && go build . )

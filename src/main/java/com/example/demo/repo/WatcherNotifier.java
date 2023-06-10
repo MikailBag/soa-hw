@@ -25,9 +25,14 @@ class WatcherNotifier {
     private final ReadWriteLock watchersLock = new ReentrantReadWriteLock();
     private final List<GameWatcher> watchers = new ArrayList<>();
     private final ConcurrentHashMap<String, WatchState> games = new ConcurrentHashMap<>();
-    private final Executor exec = Executors.newVirtualThreadPerTaskExecutor();
+    private final Executor exec;
 
     WatcherNotifier() {
+        this.exec = Executors.newThreadPerTaskExecutor(
+                Thread.ofVirtual()
+                        .name("GameWatcherNotifier-", 0)
+                        .factory()
+        );
     }
 
     void register(GameWatcher watcher) {

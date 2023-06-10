@@ -19,6 +19,7 @@ import java.util.concurrent.Executors;
 class ApiServer implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class);
     private final Server server;
+
     @Autowired
     ApiServer(
             @Value("${server.port}") int port,
@@ -26,7 +27,11 @@ class ApiServer implements AutoCloseable {
     ) throws IOException {
         ServerBuilder<?> builder = ServerBuilder.forPort(port);
         services.forEach(builder::addService);
-        builder.executor(Executors.newVirtualThreadPerTaskExecutor());
+        builder.executor(Executors.newThreadPerTaskExecutor(
+                Thread.ofVirtual()
+                        .name("grpc-server-", 0)
+                        .factory()
+        ));
         this.server = builder.build();
         log.info("Starting server on 0.0.0.0:{}", port);
         server.start();

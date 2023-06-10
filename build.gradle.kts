@@ -10,10 +10,9 @@ java {
 plugins {
 	application
 	java
-	id("org.springframework.boot") version "3.0.6"
+	id("org.springframework.boot") version "3.1.0"
 	id("io.spring.dependency-management") version "1.1.0"
 	id("com.google.protobuf") version "0.9.2"
-	//kotlin("jvm") version "1.8.21"
 }
 
 group = "com.example"
@@ -53,7 +52,7 @@ protobuf {
 
 dependencyManagement {
 	imports {
-		mavenBom("org.springframework.boot:spring-boot-dependencies:3.0.6")
+		mavenBom("org.springframework.boot:spring-boot-dependencies:3.1.0")
 	}
 }
 
@@ -66,6 +65,7 @@ dependencies {
 	implementation("io.grpc:grpc-stub:1.49.2")
 	implementation("org.jetbrains:annotations:24.0.1")
 	implementation("javax.annotation:javax.annotation-api:1.3.2")
+	implementation("redis.clients:jedis:4.3.1")
 }
 
 application {
