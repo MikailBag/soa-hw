@@ -98,7 +98,7 @@ public class RedisMessageBroker implements MessageBroker, AutoCloseable {
                             log.error("failed to receive next value");
                             continue;
                         }
-                        if (value.isEmpty()) {
+                        if (value == null || value.isEmpty()) {
                             log.debug("key {} is empty", descriptor.name());
                             continue;
                         }

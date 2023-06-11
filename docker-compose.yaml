@@ -7,21 +7,69 @@ services:
       MESSAGING_REDIS_HOST: 'redis'
       MESSAGING_REDIS_ENABLED: 'true'
       MESSAGING_MEMORY_ENABLED: 'false'
+      LOG_LEVEL_COM_EXAMPLE_DEMO_APP_RedisMessageBroker: 'DEBUG'
     ports:
       - '8443:8443'
+      - '8080:8080'
   client1:
     image: cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
     command:
-      - --address
+      - --rpc-address
       - 'server:8443'
-  client2: &client
+      - --rest-address
+      - 'server:8080'
+      - --username
+      - 'client1'
+      - --password
+      - 'password1'
+  client2:
     image: cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
     command:
-      - --address
+      - --rpc-address
       - 'server:8443'
+      - --rest-address
+      - 'server:8080'
       - --join-existing
+      - --username
+      - 'client2'
+      - --password
+      - 'password2'
   client3:
-    <<: *client
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
+    command:
+      - --rpc-address
+      - 'server:8443'
+      - --rest-address
+      - 'server:8080'
+      - --join-existing
+      - --username
+      - 'client3'
+      - --password
+      - 'password3'
   client4:
-    <<: *client
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
+    command:
+      - --rpc-address
+      - 'server:8443'
+      - --rest-address
+      - 'server:8080'
+      - --join-existing
+      - --username
+      - 'client4'
+      - --password
+      - 'password4'
+  export:
+    image: cr.yandex/crpepnp6t24n31l71vv9/soa-3-client
+    command:
+      - --rpc-address
+      - 'server:8443'
+      - --rest-address
+      - 'server:8080'
+      - --username
+      - 'client4'
+      - --export
+      - --export-path
+      - '/tmp/report.pdf'
+      - --export-wait
+      - '15'
 

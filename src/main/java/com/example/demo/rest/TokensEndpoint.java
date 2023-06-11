@@ -3,6 +3,8 @@ package com.example.demo.rest;
 import com.example.demo.model.User;
 import com.example.demo.repo.UserRepository;
 import com.example.demo.service.TokenService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/tokens")
 public class TokensEndpoint {
+    private final Logger log = LoggerFactory.getLogger(TokensEndpoint.class);
     private final UserRepository users;
     private final TokenService tokens;
 
@@ -40,6 +43,7 @@ public class TokensEndpoint {
 
     @PostMapping
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        log.info("Serving login request for user {}", request.username());
         User user = users.find(request.username());
         if (user == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new LoginResponse("", "user not found"));
