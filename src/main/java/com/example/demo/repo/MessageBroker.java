@@ -4,11 +4,14 @@ import com.example.demo.api.chat.Chat;
 
 import java.io.IOException;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public interface MessageBroker {
     interface Subscription {
         void unsubscribe() throws InterruptedException;
     }
-    void publish(Chat.Topic topic, Chat.MessageData message) throws IOException;
-    Subscription subscribe(BiConsumer<Chat.Topic, Chat.MessageData> consumer);
+
+    <T> void publish(QueueDescriptor<T> descriptor, T item) throws IOException;
+
+    <T> Subscription subscribe(QueueDescriptor<T> descriptor, Consumer<T> consumer);
 }

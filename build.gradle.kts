@@ -58,6 +58,8 @@ dependencyManagement {
 
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
+	implementation("org.springframework.boot:spring-boot-starter-web")
+	implementation("org.springframework.boot:spring-boot-starter-actuator")
 	implementation("org.slf4j:slf4j-api:2.0.7")
 	implementation("com.google.protobuf:protobuf-java:3.22.3")
 	runtimeOnly("io.grpc:grpc-netty-shaded:1.49.2")
@@ -66,6 +68,10 @@ dependencies {
 	implementation("org.jetbrains:annotations:24.0.1")
 	implementation("javax.annotation:javax.annotation-api:1.3.2")
 	implementation("redis.clients:jedis:4.4.2")
+	implementation("io.jsonwebtoken:jjwt-api:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
+	runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
+	implementation("com.itextpdf:itextpdf:5.5.13.3")
 }
 
 application {

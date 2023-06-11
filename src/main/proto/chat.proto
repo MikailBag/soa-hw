@@ -34,7 +34,6 @@ message SendResponse {
 
 message WatchRequest {
   Topic topic = 1;
-  string participant_id = 2;
 }
 
 message WatchEvent {

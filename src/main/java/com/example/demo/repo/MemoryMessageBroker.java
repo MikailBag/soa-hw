@@ -8,31 +8,32 @@ import org.springframework.stereotype.Repository;
 
 import java.io.IOException;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 @Repository
 @ConditionalOnProperty("messaging.memory.enabled")
 class MemoryMessageBroker implements MessageBroker, AutoCloseable {
-    private final SubscriberNotifier notifier;
+    private final SubscriberNotifierMap notifier;
 
     @Autowired
     MemoryMessageBroker(
             @Value("${messaging.memory.buffer-size:256}") int bufferSize
     ) {
-        this.notifier = new SubscriberNotifier(bufferSize);
+        this.notifier = new SubscriberNotifierMap(bufferSize);
     }
 
     @Override
-    public void publish(Chat.Topic topic, Chat.MessageData message) throws IOException {
+    public <T> void publish(QueueDescriptor<T> descriptor, T item) throws IOException {
         try {
-            notifier.deliver(topic, message);
+            notifier.deliver(descriptor, item);
         } catch (InterruptedException ex) {
             throw new IOException(ex);
         }
     }
 
     @Override
-    public Subscription subscribe(BiConsumer<Chat.Topic, Chat.MessageData> consumer) {
-        return notifier.subscribe(consumer);
+    public <T> Subscription subscribe(QueueDescriptor<T> descriptor, Consumer<T> consumer) {
+        return notifier.subscribe(descriptor, consumer);
     }
 
     @Override

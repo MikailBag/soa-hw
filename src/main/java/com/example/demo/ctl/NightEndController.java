@@ -31,6 +31,26 @@ public class NightEndController implements Controller {
         Set<GameOuterClass.Role> innocentRoles = Set.of(GameOuterClass.Role.NORMAL, GameOuterClass.Role.POLICEMAN);
 
         String victim = game.getNight().getVictimId();
+        if (!victim.isEmpty()) {
+            List<GameOuterClass.Participant> newParticipants = game
+                    .getParticipantsList()
+                    .stream()
+                    .map(p -> {
+                        if (p.getId().equals(victim)) {
+                            return p.toBuilder()
+                                    .setState(GameOuterClass.Participant.State.KILLED_AT_NIGHT)
+                                    .build();
+                        } else {
+                            return p;
+                        }
+                    })
+                    .toList();
+            game = game
+                    .toBuilder()
+                    .clearParticipants()
+                    .addAllParticipants(newParticipants)
+                    .build();
+        }
         boolean innocentRemain = game
                 .getParticipantsList()
                 .stream()
@@ -66,26 +86,7 @@ public class NightEndController implements Controller {
         if (game.getHistoryList().isEmpty()) {
             throw new IllegalStateException("history is empty");
         }
-        if (!victim.isEmpty()) {
-            List<GameOuterClass.Participant> newParticipants = game
-                    .getParticipantsList()
-                    .stream()
-                    .map(p -> {
-                        if (p.getId().equals(victim)) {
-                            return p.toBuilder()
-                                    .setState(GameOuterClass.Participant.State.KILLED_AT_NIGHT)
-                                    .build();
-                        } else {
-                            return p;
-                        }
-                    })
-                    .toList();
-            game = game
-                    .toBuilder()
-                    .clearParticipants()
-                    .addAllParticipants(newParticipants)
-                    .build();
-        }
+
         GameOuterClass.Cycle historyItem = game
                 .getHistory(game.getHistoryCount() - 1)
                 .toBuilder()

@@ -4,8 +4,9 @@ services:
   server:
     image: cr.yandex/crpepnp6t24n31l71vv9/soa-3
     environment:
-      SERVER: 'true'
       MESSAGING_REDIS_HOST: 'redis'
+      MESSAGING_REDIS_ENABLED: 'true'
+      MESSAGING_MEMORY_ENABLED: 'false'
     ports:
       - '8443:8443'
   client1:

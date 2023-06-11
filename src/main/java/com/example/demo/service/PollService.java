@@ -64,21 +64,21 @@ public class PollService implements GameWatcher {
     }
 
     public void poll(String id, int wakeAfter) throws UnknownGameException, InterruptedException {
-        log.info("poll started, wakeAfter={}", wakeAfter);
+        log.debug("poll started, wakeAfter={}", wakeAfter);
         var latch = startWatch(id, wakeAfter);
         GameOuterClass.Game game = repository.get(id);
         if (game == null) {
             throw new UnknownGameException();
         }
         if (game.getRevision() > wakeAfter) {
-            log.info("aborting poll: game is already newer");
+            log.debug("Aborting poll: game is already newer");
             return;
         }
         var ok = latch.await(10, TimeUnit.SECONDS);
         if (ok) {
-            log.info("finishing poll: game changed");
+            log.debug("Finishing poll: game changed");
         } else {
-            log.info("poll timed out");
+            log.debug("Poll timed out");
         }
     }
 
@@ -97,7 +97,7 @@ public class PollService implements GameWatcher {
 
     @Override
     public void onApply(GameOuterClass.Game game) {
-        log.info("Notifying observers for change: game {}, revision {}", game.getId(), game.getRevision());
+        log.debug("Notifying observers for change: game {}, revision {}", game.getId(), game.getRevision());
         waitersFor(game.getId()).signal(game.getRevision());
     }
 }

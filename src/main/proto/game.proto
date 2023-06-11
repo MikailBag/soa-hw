@@ -114,7 +114,6 @@ message Game {
 
 message GetRequest {
   string room_id = 1;
-  string participant_id = 2;
 }
 
 message GetResponse {
@@ -128,8 +127,6 @@ message JoinRequest {
 }
 
 message JoinResponse {
-  // identifies this participant in further API calls
-  string participant_id = 1;
 }
 
 message CreateRequest {

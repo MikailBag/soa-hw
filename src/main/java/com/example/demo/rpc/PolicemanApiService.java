@@ -1,4 +1,4 @@
-package com.example.demo.api;
+package com.example.demo.rpc;
 
 import com.example.demo.api.policeman.Policeman;
 import com.example.demo.api.policeman.PolicemanServiceGrpc;
@@ -25,7 +25,7 @@ class PolicemanApiService extends PolicemanServiceGrpc.PolicemanServiceImplBase 
                 try {
                     gameActions.processPolicemanCheck(
                             request.getRoomId(),
-                            request.getParticipantId(),
+                            AuthnInterceptor.CTX_KEY.get(),
                             request.getSuspectedId()
                     );
                 } catch (UnknownGameException ex) {

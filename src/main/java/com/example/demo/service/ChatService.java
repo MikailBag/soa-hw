@@ -5,6 +5,7 @@ import com.example.demo.api.game.GameOuterClass;
 import com.example.demo.repo.GameRepository;
 import com.example.demo.repo.GameWatcher;
 import com.example.demo.repo.MessageBroker;
+import com.example.demo.repo.QueueDescriptors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +24,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Service
-public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, GameWatcher, AutoCloseable {
+public class ChatService implements Consumer<Chat.ServerInternalMessageDto>, GameWatcher, AutoCloseable {
     private final Logger log = LoggerFactory.getLogger(ChatService.class);
 
     public static class PermissionDeniedException extends Exception {
@@ -65,7 +67,7 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
             GameRepository repository
     ) {
         this.broker = broker;
-        this.subscription = broker.subscribe(this);
+        this.subscription = broker.subscribe(QueueDescriptors.CHAT_MESSAGES, this);
         this.repository = repository;
         this.repository.watch(this);
     }
@@ -91,24 +93,24 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
     }
 
     private void checkAccess(Chat.Topic topic, String id) throws PermissionDeniedException {
-        log.info("checking access");
+        log.debug("checking access");
         GameOuterClass.Game game = repository.get(topic.getRoomId());
         if (game == null) {
-            log.info("rejecting access: game does not exist");
+            log.debug("rejecting access: game does not exist");
             throw new PermissionDeniedException("game " + topic.getRoomId() + " does not exist");
         }
         if (!topic.getStreamId().equals("main") && !game.getState().equals(GameOuterClass.Game.State.IN_PROGRESS)) {
-            log.info("rejecting access: invalid game state");
+            log.debug("rejecting access: invalid game state");
             throw new PermissionDeniedException("Non-main streams are only available for in-progress games");
         }
-        log.info("Searching for participant");
+        log.debug("Searching for participant");
         GameOuterClass.Participant participant = game
                 .getParticipantsList()
                 .stream()
                 .filter(p -> p.getId().equals(id))
                 .findFirst()
                 .orElseThrow(() -> new PermissionDeniedException("Only game participants can use chat"));
-        log.info("Proceeding with participant");
+        log.debug("Proceeding with participant");
         switch (topic.getStreamId()) {
             case "main" -> {
             }
@@ -131,12 +133,16 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
             }
             default -> throw new PermissionDeniedException("Unknown stream");
         }
-        log.info("granting access");
+        log.debug("granting access");
     }
 
     public void send(Chat.Topic topic, Chat.MessageData message) throws IOException, PermissionDeniedException {
         checkAccess(topic, message.getParticipantId());
-        broker.publish(topic, message);
+        var dto = Chat.ServerInternalMessageDto.newBuilder()
+                .setTopic(topic)
+                .setData(message)
+                .build();
+        broker.publish(QueueDescriptors.CHAT_MESSAGES, dto);
     }
 
     public void sendSystemMessage(String game, String message) {
@@ -151,20 +157,25 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
                 .setBody(message)
                 .setParticipantId(SYSTEM)
                 .build();
+
+        var dto = Chat.ServerInternalMessageDto.newBuilder()
+                .setTopic(topic)
+                .setData(m)
+                .build();
         try {
-            broker.publish(topic, m);
+            broker.publish(QueueDescriptors.CHAT_MESSAGES, dto);
         } catch (IOException ex) {
             log.warn("failed to send system message {}", message, ex);
         }
     }
 
     @Override
-    public void accept(Chat.Topic topic, Chat.MessageData messageData) {
-        TopicState state = getTopicState(topic);
+    public void accept(Chat.ServerInternalMessageDto dto) {
+        TopicState state = getTopicState(dto.getTopic());
         state.lock.lock();
         try {
-            state.users.forEach((id, queue) -> queue.add(messageData));
-            log.info("Delivered message to {} watches", state.users.size());
+            state.users.forEach((id, queue) -> queue.add(dto.getData()));
+            log.debug("Delivered message to {} watches", state.users.size());
         } finally {
             state.lock.unlock();
         }
@@ -176,12 +187,12 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
         state.lock.lock();
         try {
             if (state.closed) {
-                log.info("terminating subscription: topic is closed");
+                log.debug("terminating subscription: topic is closed");
                 boolean ignored = queue.offer(CLOSE);
                 return () -> {
                 };
             }
-            log.info("created subscription to {}/{}", topic.getRoomId(), topic.getStreamId());
+            log.debug("created subscription to {}/{}", topic.getRoomId(), topic.getStreamId());
             state.users.put(uuid, queue);
         } finally {
             state.lock.unlock();
@@ -196,16 +207,16 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
             } finally {
                 state.lock.unlock();
             }
-            log.info("removed subscription to {}/{}", topic.getRoomId(), topic.getStreamId());
+            log.debug("removed subscription to {}/{}", topic.getRoomId(), topic.getStreamId());
         };
     }
 
     public void subscribe(
             Chat.Topic topic, Function<Chat.MessageData, Boolean> consumer, String id
     ) throws InterruptedException, PermissionDeniedException {
-        log.info("Processing subscribe request for {}/{}", topic.getRoomId(), topic.getStreamId());
+        log.debug("Processing subscribe request for {}/{}", topic.getRoomId(), topic.getStreamId());
         checkAccess(topic, id);
-        log.info("Access was granted, proceeding");
+        log.debug("Access was granted, proceeding");
         var queue = new LinkedBlockingQueue<Chat.MessageData>();
         Runnable cleanup = subscribeQueue(queue, topic);
         try {
@@ -226,7 +237,7 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
 
     @Override
     public void onApply(GameOuterClass.Game game) {
-        log.info("Processing game change");
+        log.debug("Processing game change");
         // TODO: list all games on startup
         boolean shouldBeActive = Set.of(
                 GameOuterClass.Game.State.IN_PROGRESS,
@@ -242,10 +253,10 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
             activeGamesLock.lock();
             try {
                 if (shouldBeActive) {
-                    log.info("Marking game as active");
+                    log.debug("Marking game as active");
                     activeGames.add(game.getId());
                 } else {
-                    log.info("Marking game as inactive");
+                    log.debug("Marking game as inactive");
                     activeGames.remove(game.getId());
                     needsToClearGame = true;
                 }
@@ -262,7 +273,7 @@ public class ChatService implements BiConsumer<Chat.Topic, Chat.MessageData>, Ga
         if (topicsToCleanup == null) {
             return;
         }
-        log.info("Closing expired topics {}", topicsToCleanup);
+        log.debug("Closing expired topics {}", topicsToCleanup);
         for (String k : topicsToCleanup) {
             TopicState state = topics.get(k);
             if (state == null) {

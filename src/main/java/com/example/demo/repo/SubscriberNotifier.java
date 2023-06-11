@@ -1,10 +1,8 @@
 package com.example.demo.repo;
 
-import com.example.demo.api.chat.Chat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,18 +11,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 class SubscriberNotifier implements AutoCloseable {
     private final Logger log = LoggerFactory.getLogger(MemoryMessageBroker.class);
 
-    private record Item(Chat.Topic topic, Chat.MessageData data) {
-    }
-
     private final int bufferSize;
     private final Lock subscribersUpdates = new ReentrantLock();
     private boolean shuttingDown = false;
-    private volatile List<CloseableQueue<Item>> subscribers = Collections.emptyList();
+    private volatile List<CloseableQueue<Object>> subscribers = Collections.emptyList();
     private final ExecutorService executor;
 
     SubscriberNotifier(
@@ -36,28 +31,27 @@ class SubscriberNotifier implements AutoCloseable {
                 .factory());
     }
 
-    public void deliver(Chat.Topic topic, Chat.MessageData message) throws InterruptedException {
-        List<CloseableQueue<Item>> snapshot = subscribers;
+    public void deliver(Object item) throws InterruptedException {
+        List<CloseableQueue<Object>> snapshot = subscribers;
         log.info("Delivering message to {} subscribers", snapshot.size());
-        Item item = new Item(topic, message);
-        for (CloseableQueue<Item> q : snapshot) {
+        for (CloseableQueue<Object> q : snapshot) {
             q.put(item);
         }
     }
 
-    public MessageBroker.Subscription subscribe(BiConsumer<Chat.Topic, Chat.MessageData> consumer) {
-        var queue = new CloseableQueue<Item>(bufferSize);
+    public MessageBroker.Subscription subscribe(Consumer<Object> consumer) {
+        var queue = new CloseableQueue<Object>(bufferSize);
         var completed = new CountDownLatch(1);
         executor.execute(() -> {
             log.info("starting subscription");
             while (true) {
                 try {
-                    Item it = queue.take();
+                    Object it = queue.take();
                     if (it == null) {
                         log.info("got null from take, stopping");
                         break;
                     }
-                    consumer.accept(it.topic(), it.data());
+                    consumer.accept(it);
                 } catch (InterruptedException ex) {
                     log.error("worker thread was interrupted, some messages were lost");
                 }

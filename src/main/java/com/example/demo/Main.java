@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.util.concurrent.locks.LockSupport;
@@ -16,9 +17,9 @@ public class Main {
         var app = new SpringApplication(Main.class);
 
         log.info("Starting server");
-        app.setAdditionalProfiles("server");
 
-        app.run(args);
+        ApplicationContext ctx = app.run(args);
+        var bean = ctx.getBean("requestMappingHandlerMapping");
         // sleep forever since we are server; our thread will be killed at the end of the
         // JVM shutdown sequence.
         while (true) {

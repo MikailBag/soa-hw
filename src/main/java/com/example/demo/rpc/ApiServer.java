@@ -1,4 +1,4 @@
-package com.example.demo.api;
+package com.example.demo.rpc;
 
 import io.grpc.BindableService;
 import io.grpc.Server;
@@ -15,18 +15,19 @@ import java.util.List;
 import java.util.concurrent.Executors;
 
 @Component
-@ConditionalOnProperty("server.enabled")
 class ApiServer implements AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(ApiServer.class);
     private final Server server;
 
     @Autowired
     ApiServer(
-            @Value("${server.port}") int port,
-            List<BindableService> services
+            @Value("${rpc.port}") int port,
+            List<BindableService> services,
+            AuthnInterceptor interceptor
     ) throws IOException {
         ServerBuilder<?> builder = ServerBuilder.forPort(port);
         services.forEach(builder::addService);
+        builder.intercept(interceptor);
         builder.executor(Executors.newThreadPerTaskExecutor(
                 Thread.ofVirtual()
                         .name("grpc-handler-", 0)

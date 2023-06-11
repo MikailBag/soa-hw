@@ -6,7 +6,6 @@ option go_package="example.com/soa/pb";
 
 message CheckRequest {
   string room_id = 1;
-  string participant_id = 2;
   string suspected_id = 3;
 }
 

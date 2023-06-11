@@ -108,7 +108,7 @@ public class RoomService {
     }
 
     public GameOuterClass.Participant join(
-            String id, String name
+            String id, String name, String participantId
     ) throws GameRepository.ConflictException, GameAlreadyStartedException, UnknownGameException,
             NameAlreadyUsedException {
         GameOuterClass.Game game = repository.get(id);
@@ -125,7 +125,6 @@ public class RoomService {
         if (nameAlreadyUsed) {
             throw new NameAlreadyUsedException();
         }
-        String participantId = UUID.randomUUID().toString();
         GameOuterClass.Participant newParticipant = GameOuterClass.Participant.newBuilder()
                 .setName(name)
                 .setId(participantId)

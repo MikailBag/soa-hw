@@ -1,4 +1,4 @@
-package com.example.demo.api;
+package com.example.demo.rpc;
 
 import com.example.demo.api.citizen.Citizen;
 import com.example.demo.api.citizen.CitizenServiceGrpc;
@@ -25,7 +25,7 @@ public class CitizenApiService extends CitizenServiceGrpc.CitizenServiceImplBase
                 try {
                     gameActions.processCitizenVote(
                             request.getRoomId(),
-                            request.getParticipantId(),
+                            AuthnInterceptor.CTX_KEY.get(),
                             request.getSuspectedId()
                     );
                 } catch (UnknownGameException ex) {

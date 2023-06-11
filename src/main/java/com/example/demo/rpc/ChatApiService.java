@@ -1,10 +1,9 @@
-package com.example.demo.api;
+package com.example.demo.rpc;
 
 import com.example.demo.api.chat.Chat;
 import com.example.demo.api.chat.ChatServiceGrpc;
 import com.example.demo.service.ChatService;
 import io.grpc.Status;
-import io.grpc.StatusException;
 import io.grpc.stub.ServerCallStreamObserver;
 import io.grpc.stub.StreamObserver;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +22,20 @@ class ChatApiService extends ChatServiceGrpc.ChatServiceImplBase {
 
     @Override
     public void send(Chat.SendRequest request, StreamObserver<Chat.SendResponse> responseObserver) {
-        if (request.getMessage().getParticipantId().isEmpty()) {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription("participant id unset").asException());
+        if (!request.getMessage().getParticipantId().isEmpty()) {
+            responseObserver.onError(
+                    Status.INVALID_ARGUMENT
+                            .withDescription("participant id may not be set on input")
+                            .asException()
+            );
             return;
         }
+        var message = request.getMessage()
+                .toBuilder()
+                .setParticipantId(AuthnInterceptor.CTX_KEY.get())
+                .build();
         try {
-            svc.send(request.getTopic(), request.getMessage());
+            svc.send(request.getTopic(), message);
         } catch (IOException ex) {
             Status s;
             if (((ServerCallStreamObserver<Chat.SendResponse>) responseObserver).isCancelled()) {
@@ -56,7 +63,7 @@ class ChatApiService extends ChatServiceGrpc.ChatServiceImplBase {
                         .build();
                 responseObserver.onNext(ev);
                 return !((ServerCallStreamObserver<Chat.WatchEvent>) responseObserver).isCancelled();
-            }, request.getParticipantId());
+            }, AuthnInterceptor.CTX_KEY.get());
             responseObserver.onCompleted();
         } catch (InterruptedException ex) {
             throw new RuntimeException(ex);

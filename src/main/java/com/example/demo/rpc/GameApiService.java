@@ -1,4 +1,4 @@
-package com.example.demo.api;
+package com.example.demo.rpc;
 
 import com.example.demo.api.game.GameOuterClass;
 import com.example.demo.api.game.GameServiceGrpc;
@@ -58,12 +58,12 @@ public class GameApiService extends GameServiceGrpc.GameServiceImplBase {
 
     @Override
     public void join(GameOuterClass.JoinRequest request, StreamObserver<GameOuterClass.JoinResponse> responseObserver) {
-        GameOuterClass.Participant newParticipant;
+        String participantId = AuthnInterceptor.CTX_KEY.get();
         try {
-            newParticipant = Util.retry(
+            Util.retry(
                     () -> {
                         try {
-                            return roomService.join(request.getRoomId(), request.getName());
+                            return roomService.join(request.getRoomId(), request.getName(), participantId);
                         } catch (RoomService.GameAlreadyStartedException ex) {
                             throw Status.FAILED_PRECONDITION
                                     .withDescription("Can not join already started game")
@@ -82,7 +82,6 @@ public class GameApiService extends GameServiceGrpc.GameServiceImplBase {
             return;
         }
         var response = GameOuterClass.JoinResponse.newBuilder();
-        response.setParticipantId(newParticipant.getId());
         responseObserver.onNext(response.build());
         responseObserver.onCompleted();
     }
@@ -94,7 +93,7 @@ public class GameApiService extends GameServiceGrpc.GameServiceImplBase {
             String msg = "game " + request.getRoomId() + " not found";
             responseObserver.onError(new StatusException(Status.NOT_FOUND.withDescription(msg)));
         } else {
-            game = filterService.filter(game, request.getParticipantId());
+            game = filterService.filter(game, AuthnInterceptor.CTX_KEY.get());
             var res = GameOuterClass.GetResponse.newBuilder();
             res.setGame(game);
             responseObserver.onNext(res.build());

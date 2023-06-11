@@ -1,4 +1,4 @@
-package com.example.demo.api;
+package com.example.demo.rpc;
 
 import com.example.demo.api.criminal.Criminal;
 import com.example.demo.api.criminal.CriminalServiceGrpc;
@@ -29,7 +29,7 @@ class CriminalApiService extends CriminalServiceGrpc.CriminalServiceImplBase {
                         try {
                             gameActions.processCriminalVote(
                                     request.getRoomId(),
-                                    request.getParticipantId(),
+                                    AuthnInterceptor.CTX_KEY.get(),
                                     request.getVictimId()
                             );
                         } catch (GameActionsService.ActionException ex) {
